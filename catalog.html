@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://connect.facebook.net/en_US/sdk.js"></script>
+</head>
+<body>
+  <button onclick="login()">Войти через Facebook</button>
+  <div id="result"></div>
+
+<script>
+  FB.init({
+    appId: '1718942129273137',
+    version: 'v18.0'
+  });
+
+  function login() {
+    FB.login(function(response) {
+      if (response.authResponse) {
+        checkCatalog(response.authResponse.accessToken);
+      }
+    }, {scope: 'catalog_management'});
+  }
+
+  function checkCatalog(token) {
+    fetch(`https://graph.facebook.com/v18.0/me/product_catalogs?fields=id,name,product_count&access_token=${token}`)
+      .then(res => res.json())
+      .then(data => {
+        data.data.forEach(catalog => {
+          // показываем каталоги и статусы товаров
+          displayCatalog(catalog, token);
+        });
+      });
+  }
+
+  function displayCatalog(catalog, token) {
+    fetch(`https://graph.facebook.com/v18.0/${catalog.id}/products?fields=id,name,review_status,visibility&access_token=${token}`)
+      .then(res => res.json())
+      .then(products => {
+        const div = document.getElementById('result');
+        products.data.forEach(p => {
+          div.innerHTML += `<p>${p.name} — ${p.review_status} — ${p.visibility}</p>`;
+        });
+      });
+  }
+</script>
+</body>
+</html>
